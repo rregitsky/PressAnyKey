@@ -20,7 +20,9 @@ namespace UnityStandardAssets._2D
         private Animator m_Anim;            // Reference to the player's animator component.
         private Rigidbody2D m_Rigidbody2D;
         private bool m_FacingRight = true;  // For determining which way the player is currently facing.
+
         const float aimModifier = .3f; // Modifier to slow or speed up aiming movement
+        private GameObject handGameObject;
 
         private void Awake()
         {
@@ -29,6 +31,11 @@ namespace UnityStandardAssets._2D
             m_CeilingCheck = transform.Find("CeilingCheck");
             m_Anim = GetComponent<Animator>();
             m_Rigidbody2D = GetComponent<Rigidbody2D>();
+
+            Transform handTransform = transform.Find("Hand");
+            if (handTransform) {
+                handGameObject = handTransform.gameObject;
+            }
         }
 
 
@@ -52,6 +59,8 @@ namespace UnityStandardAssets._2D
 
         public void Aim(Vector2 direction) {
             m_AimReticule.transform.Translate(direction.normalized * aimModifier);
+
+            LookAt2D(handGameObject.transform, m_AimReticule.transform.position);
         } 
 
 
@@ -115,6 +124,21 @@ namespace UnityStandardAssets._2D
             Vector3 theScale = transform.localScale;
             theScale.x *= -1;
             transform.localScale = theScale;
+        }
+
+        /// <summary>
+        /// Force a game object to look at a given point.
+        /// </summary>
+        /// <param name="transform">Transform in which modify the looking direction</param>
+        /// <param name="point">Point in 2D space in which to look at</param>
+        /// <param name="lookAxis">(optional) Axis to force to look at the point. If null, the given transform's right vector will be used.</param>
+        private void LookAt2D(Transform transform, Vector2 point, Vector2 lookAxis = default(Vector2)) {
+            lookAxis = lookAxis != default(Vector2) ? lookAxis : new Vector2(transform.right.x, transform.right.y);
+            Vector2 diff = point - new Vector2(transform.position.x, transform.position.y);
+            Vector2 newDir = diff.normalized;
+
+            float zRotation = Vector2.SignedAngle(lookAxis, newDir);
+            transform.Rotate(new Vector3(0, 0, 1), zRotation);
         }
     }
 }
